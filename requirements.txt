@@ -1,9 +1,12 @@
-pandas
+﻿pandas>=2.2
 numpy
 requests
 holidays
 matplotlib
 lightgbm
+xgboost
+statsmodels
 scikit-learn
 shap
 flask
+joblib

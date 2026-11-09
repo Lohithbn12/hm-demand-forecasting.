@@ -1,13 +1,20 @@
+﻿# data
 data/raw/
 data/interim/
 data/external/
-__pycache__/
-*.pyc
-.venv/
+
+# models
 models/*.pkl
 models/*.joblib
+
+# python
 __pycache__/
 *.pyc
 .venv/
 venv/
 .env
+
+# OS / editor
+.DS_Store
+.vscode/
+.ipynb_checkpoints/
