@@ -1,0 +1,13 @@
+data/raw/
+data/interim/
+data/external/
+__pycache__/
+*.pyc
+.venv/
+models/*.pkl
+models/*.joblib
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env

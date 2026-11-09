@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demand &amp; Inventory Planner</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --text:#16202e; --muted:#667085; --line:#e4e7ec;
+    --accent:#2563eb; --accent-soft:#dbe7ff; --safety:#f59e0b; --safety-soft:#fdecc4;
+    --good:#0f9d6e; --warn:#b54708; --bad:#d92d20; --chip:#eef2f7;
+    --a:#1d4ed8; --b:#0e9384; --c:#667085;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0e131a; --card:#161d27; --text:#e7ecf3; --muted:#98a2b3; --line:#263040;
+      --accent:#5b8def; --accent-soft:#1d2c4d; --safety:#f5a623; --safety-soft:#3d3118;
+      --good:#32d5a0; --warn:#f5a623; --bad:#f97066; --chip:#1f2835;
+      --a:#6ea0ff; --b:#35c4b3; --c:#98a2b3;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 48px}
+  h1{font-size:26px;margin:0 0 2px;letter-spacing:-.01em}
+  h2{font-size:17px;margin:0}
+  h3{font-size:13px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+  .top{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+  .sub{margin:0;color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px;color:var(--muted)}
+  .chip b{color:var(--text);font-weight:600}
+  .banner{border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--card);
+    border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:14px}
+  .banner.live{border-left-color:var(--good)} .banner.warn{border-left-color:var(--safety)}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .kpi,.card{background:var(--card);border:1px solid var(--line);border-radius:14px}
+  .kpi{padding:16px 18px}
+  .kpi .v{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+  .kpi .s{font-size:13px;color:var(--muted);margin-top:2px}
+  .grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:18px;align-items:start;margin-bottom:18px}
+  .card{padding:18px 20px}
+  .card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}
+  .hint{margin:0 0 12px;color:var(--muted);font-size:13px}
+  .legend{display:flex;gap:14px;font-size:12.5px;color:var(--muted);margin:0 0 10px}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+  button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--card);color:var(--text);
+    border-radius:8px;padding:6px 12px;cursor:pointer}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;
+    text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr{cursor:pointer} tbody tr:hover{background:var(--chip)}
+  tbody tr.sel{background:var(--accent-soft)}
+  tbody tr:last-child td{border-bottom:none}
+  .name{font-weight:600}
+  .badge{display:inline-block;min-width:34px;text-align:center;border-radius:6px;padding:1px 7px;font-size:12px;
+    font-weight:700;color:#fff;margin-left:8px;vertical-align:1px}
+  .badge.A{background:var(--a)} .badge.B{background:var(--b)} .badge.C{background:var(--c)}
+  .bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--chip);min-width:90px}
+  .bar i{display:block;height:100%} .bar .f{background:var(--accent)} .bar .s{background:var(--safety)}
+  .pill{font-size:12px;color:var(--muted);margin-left:6px}
+  .pill.hi{color:var(--warn);font-weight:600}
+  .sticky{position:sticky;top:16px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 14px}
+  .stat{background:var(--chip);border-radius:10px;padding:10px 12px}
+  .stat .l{font-size:12px;color:var(--muted)} .stat .n{font-size:20px;font-weight:700;letter-spacing:-.01em}
+  .stat.f .n{color:var(--accent)} .stat.s .n{color:var(--safety)}
+  .say{background:var(--chip);border-radius:10px;padding:10px 12px;font-size:14px;margin:12px 0}
+  .calc{border-top:1px solid var(--line);padding-top:12px;margin-top:6px}
+  .calc .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+  label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:3px}
+  input{width:100%;font:inherit;padding:7px 10px;border-radius:8px;border:1px solid var(--line);
+    background:var(--card);color:var(--text)}
+  input:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+  .result{border-radius:10px;padding:10px 12px;font-size:14px;background:var(--chip)}
+  .result b{font-size:18px}
+  .result.order{background:var(--accent-soft)} .result.ok{background:rgba(15,157,110,.12)}
+  svg{display:block;width:100%;height:auto}
+  svg text{fill:var(--muted);font-size:11px}
+  svg .val{fill:var(--text);font-weight:600;font-size:12px}
+  .help{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 28px;margin-top:10px}
+  .help p{margin:0;font-size:14px} .help b{color:var(--text)}
+  .wx-sum{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 12px}
+  .err{color:var(--bad)}
+  footer{color:var(--muted);font-size:13px;margin-top:8px}
+  footer li{margin-bottom:4px}
+  @media (max-width:900px){
+    .kpis{grid-template-columns:repeat(2,1fr)} .grid{grid-template-columns:1fr}
+    .sticky{position:static} .hide-s{display:none} .help{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <h1>Demand &amp; Inventory Planner</h1>
+      <p class="sub" id="sub">Loading forecast…</p>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="banner" id="banner" hidden></div>
+  <section class="kpis" id="kpis"></section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="card-head">
+        <h2>Order plan by category</h2>
+        <button id="csv" type="button">Download CSV</button>
+      </div>
+      <p class="hint">Click a row to see the weekly forecast and an order calculator.</p>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--accent)"></span>Expected demand (4 weeks)</span>
+        <span><span class="dot" style="background:var(--safety)"></span>Safety stock (cushion)</span>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Category</th><th class="hide-s">Service goal</th><th>Forecast</th>
+          <th>Safety stock</th><th>Order up to</th><th class="hide-s" style="width:20%"> </th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+
+    <aside class="card sticky" id="detail"><p class="hint">Loading…</p></aside>
+  </div>
+
+  <section class="card" id="weatherCard" style="margin-bottom:18px">
+    <div class="card-head"><h2>Live weather: Stockholm, next 14 days</h2></div>
+    <p class="hint">Real-time data from the Open-Meteo API, fetched when you opened this page.</p>
+    <div id="weather"><p class="hint">Loading weather…</p></div>
+  </section>
+
+  <section class="card" style="margin-bottom:18px">
+    <h2>How to read this page</h2>
+    <div class="help">
+      <p><b>Forecast.</b> How many units the model expects to sell over the next 4 weeks.</p>
+      <p><b>Safety stock.</b> Extra units kept as a cushion, because forecasts are never exact. Harder-to-predict categories get a bigger cushion.</p>
+      <p><b>Order up to.</b> Forecast + safety stock. Stock on hand plus on order should reach this level.</p>
+      <p><b>Class (e.g. AX).</b> First letter = importance by revenue (A highest). Second letter = how steady demand is (X steady, Y moderate, Z very variable or seasonal).</p>
+      <p><b>Service goal.</b> The target chance of not running out of stock during the 4 weeks. Important categories get a higher goal.</p>
+      <p><b>Order quantity.</b> Order up to, minus what you already hold, minus what is already on order.</p>
+    </div>
+  </section>
+
+  <footer>
+    <ul>
+      <li>Demo data: H&amp;M sales 2018–2020. City (Stockholm) is an assumption because the dataset has no store location.</li>
+      <li>The model's average forecast error was about 23% (WAPE) on a 24-week backtest, so treat numbers as planning estimates, not exact predictions.</li>
+      <li>The H&amp;M data has no inventory. Stock figures in the calculator are numbers you type in.</li>
+    </ul>
+  </footer>
+</div>
+
+<script>
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dm = iso => { const [y,m,d] = iso.split("-").map(Number); return d + " " + MONTHS[m-1]; };
+const dmy = iso => dm(iso) + " " + iso.slice(0,4);
+const ABC = {A:"high revenue", B:"medium revenue", C:"lower revenue"};
+const XYZ = {X:"steady demand", Y:"moderately variable demand", Z:"highly variable or seasonal demand"};
+
+let DATA = null, selected = null;
+
+async function load(){
+  try{
+    const r = await fetch("/forecast");
+    DATA = await r.json();
+    if(!r.ok || DATA.error) throw new Error(DATA.error || ("HTTP " + r.status));
+    DATA.products.forEach(p => p.ssPct = 100 * p.safety_stock / p.forecast_4wk);
+    renderHeader(); renderKpis(); renderRows(); select(DATA.products[0].product_type);
+  }catch(e){
+    document.getElementById("sub").innerHTML = '<span class="err">Could not load the forecast: ' + esc(e.message) + '</span>';
+    document.getElementById("detail").innerHTML = '<p class="hint">Check that the API terminal is running and steps 1-4 have been run.</p>';
+  }
+  loadWeather();
+}
+
+function renderHeader(){
+  const w = DATA.forecast_weeks;
+  document.getElementById("sub").textContent =
+    "Forecast for " + dm(w[0]) + " – " + dmy(w[w.length-1]) + " (4 weeks), planned from sales up to week of " + dmy(DATA.last_actual_week);
+  const modelName = DATA.model.replace(/_/g," ");
+  document.getElementById("chips").innerHTML =
+    '<span class="chip">Model: <b>' + esc(modelName) + '</b></span>' +
+    '<span class="chip">City: <b>' + esc(DATA.city) + '</b></span>' +
+    '<span class="chip">Safety multiplier: <b>' + DATA.error_buffer + '</b></span>';
+
+  const src = Object.values(DATA.weather_source_by_week);
+  const allArchive = src.every(s => s.includes("archive"));
+  const anyClim = src.some(s => s === "climatology");
+  const b = document.getElementById("banner");
+  b.hidden = false;
+  if(anyClim){
+    b.className = "banner warn";
+    b.innerHTML = "<b>Weather fallback in use.</b> The weather API could not be reached for some weeks, so average weather for that time of year was used. Forecasts still work but are less weather-aware.";
+  }else if(allArchive){
+    b.className = "banner";
+    b.innerHTML = "<b>Replay mode.</b> The sales data ends in September 2020, so this forecasts the 4 weeks after it using <b>observed</b> weather from the Open-Meteo archive. The live weather panel below shows today's real forecast from the same API. With current sales data, the model would use live forecasts automatically.";
+  }else{
+    b.className = "banner live";
+    b.innerHTML = "<b>Live mode.</b> Weather comes from the live Open-Meteo forecast for the weeks ahead.";
+  }
+}
+
+function renderKpis(){
+  const P = DATA.products;
+  const tf = P.reduce((a,p)=>a+p.forecast_4wk,0), ts = P.reduce((a,p)=>a+p.safety_stock,0),
+        to = P.reduce((a,p)=>a+p.order_up_to,0);
+  const top = [...P].sort((a,b)=>b.forecast_4wk-a.forecast_4wk)[0];
+  const hard = [...P].sort((a,b)=>b.ssPct-a.ssPct)[0];
+  const k = (label, value, sub) => '<div class="kpi"><h3>'+label+'</h3><div class="v">'+value+'</div><div class="s">'+sub+'</div></div>';
+  document.getElementById("kpis").innerHTML =
+    k("Expected demand", fmt(tf), "units in 4 weeks, all categories") +
+    k("Safety stock", fmt(ts), (100*ts/tf).toFixed(0) + "% on top of the forecast") +
+    k("Order up to", fmt(to), "total target stock level") +
+    k("Biggest / hardest", esc(top.product_type), "largest demand · most cushion: " + esc(hard.product_type) + " (" + hard.ssPct.toFixed(0) + "%)");
+}
+
+function renderRows(){
+  const P = DATA.products, max = Math.max(...P.map(p=>p.order_up_to));
+  document.getElementById("rows").innerHTML = P.map(p => {
+    const fw = 100*p.forecast_4wk/max, sw = 100*p.safety_stock/max;
+    const hi = p.ssPct >= 40 ? " hi" : "";
+    return '<tr data-p="'+esc(p.product_type)+'">' +
+      '<td><span class="name">'+esc(p.product_type)+'</span><span class="badge '+p.class[0]+'">'+esc(p.class)+'</span></td>' +
+      '<td class="hide-s">'+Math.round(p.target_service*100)+'%</td>' +
+      '<td>'+fmt(p.forecast_4wk)+'</td>' +
+      '<td>'+fmt(p.safety_stock)+'<span class="pill'+hi+'">'+p.ssPct.toFixed(0)+'%</span></td>' +
+      '<td><b>'+fmt(p.order_up_to)+'</b></td>' +
+      '<td class="hide-s"><div class="bar"><i class="f" style="width:'+fw+'%"></i><i class="s" style="width:'+sw+'%"></i></div></td></tr>';
+  }).join("");
+  document.querySelectorAll("#rows tr").forEach(tr => tr.onclick = () => select(tr.dataset.p));
+}
+
+function weeklyChart(p){
+  const W=400,H=190,pl=10,pr=10,pt=24,pb=26;
+  const vals = p.weekly_forecast.map(w=>w.units), mx = Math.max(...vals)*1.12;
+  const n = vals.length, slot = (W-pl-pr)/n, bw = slot*0.58;
+  let s = '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Weekly forecast">';
+  s += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+(H-pb)+'" y2="'+(H-pb)+'" stroke="var(--line)"/>';
+  p.weekly_forecast.forEach((w,i)=>{
+    const h = (H-pt-pb)*w.units/mx, x = pl+i*slot+(slot-bw)/2, y = H-pb-h;
+    s += '<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+h+'" rx="5" fill="var(--accent)"/>';
+    s += '<text class="val" x="'+(x+bw/2)+'" y="'+(y-6)+'" text-anchor="middle">'+fmt(w.units)+'</text>';
+    s += '<text x="'+(x+bw/2)+'" y="'+(H-8)+'" text-anchor="middle">'+dm(w.week_start)+'</text>';
+  });
+  return s + '</svg>';
+}
+
+function select(name){
+  selected = name;
+  document.querySelectorAll("#rows tr").forEach(tr => tr.classList.toggle("sel", tr.dataset.p === name));
+  const p = DATA.products.find(x => x.product_type === name);
+  const avg = p.forecast_4wk/4, svc = Math.round(p.target_service*100);
+  document.getElementById("detail").innerHTML =
+    '<div class="card-head"><h2>'+esc(p.product_type)+'<span class="badge '+p.class[0]+'">'+esc(p.class)+'</span></h2></div>' +
+    '<p class="hint">'+ABC[p.class[0]]+' · '+XYZ[p.class[1]]+'</p>' +
+    '<div class="stats">' +
+      '<div class="stat f"><div class="l">Expected demand</div><div class="n">'+fmt(p.forecast_4wk)+'</div></div>' +
+      '<div class="stat s"><div class="l">+ Safety stock</div><div class="n">'+fmt(p.safety_stock)+'</div></div>' +
+      '<div class="stat"><div class="l">= Order up to</div><div class="n">'+fmt(p.order_up_to)+'</div></div>' +
+    '</div>' +
+    '<h3>Weekly forecast (units)</h3>' + weeklyChart(p) +
+    '<div class="say">About <b>'+fmt(avg)+'</b> units per week are expected. Holding an extra <b>'+fmt(p.safety_stock)+'</b> units ('+p.ssPct.toFixed(0)+'% of the forecast) aims for roughly a <b>'+svc+'%</b> chance of not running out during these 4 weeks.</div>' +
+    '<div class="calc"><h3>Order calculator</h3>' +
+      '<div class="row"><div><label for="oh">Stock on hand (units)</label><input id="oh" type="number" min="0" placeholder="e.g. 40000"></div>' +
+      '<div><label for="oo">Already on order (units)</label><input id="oo" type="number" min="0" placeholder="e.g. 5000"></div></div>' +
+      '<div class="result" id="res">Enter your current stock to see how much to order.</div></div>';
+  const oh = document.getElementById("oh"), oo = document.getElementById("oo");
+  const calc = () => {
+    const res = document.getElementById("res");
+    if(oh.value === "" && oo.value === ""){ res.className="result"; res.textContent="Enter your current stock to see how much to order."; return; }
+    const have = (+oh.value||0) + (+oo.value||0), q = Math.max(0, p.order_up_to - have);
+    if(q > 0){
+      res.className = "result order";
+      res.innerHTML = "Order <b>"+fmt(q)+"</b> units<br><span class='hint' style='margin:0'>"+fmt(p.order_up_to)+" target − "+fmt(have)+" already held or ordered</span>";
+    }else{
+      res.className = "result ok";
+      res.innerHTML = "<b>No order needed.</b><br><span class='hint' style='margin:0'>Stock plus orders ("+fmt(have)+") already reach the target ("+fmt(p.order_up_to)+").</span>";
+    }
+  };
+  oh.oninput = calc; oo.oninput = calc;
+}
+
+async function loadWeather(){
+  const box = document.getElementById("weather");
+  try{
+    const r = await fetch("/weather/live");
+    const j = await r.json();
+    if(!r.ok || j.error) throw new Error(j.error || ("HTTP " + r.status));
+    const d = j.daily;
+    const avg = d.reduce((a,x)=>a+x.temp_mean,0)/d.length;
+    const cold = d.reduce((a,x)=>x.temp_min<a.temp_min?x:a, d[0]);
+    const rain = d.reduce((a,x)=>a+x.precip,0);
+    box.innerHTML =
+      '<div class="wx-sum">' +
+        '<span class="chip">Average <b>'+avg.toFixed(1)+' °C</b></span>' +
+        '<span class="chip">Coldest night <b>'+cold.temp_min.toFixed(1)+' °C</b> on '+dm(cold.t_dat)+'</span>' +
+        '<span class="chip">Total precipitation <b>'+rain.toFixed(1)+' mm</b></span></div>' +
+      tempChart(d) + precipChart(d) +
+      '<div class="say">Why it matters: in the 2018–2020 data, weekly demand for Shorts moved with temperature (correlation about +0.63) and Sweaters moved against it (about −0.45). Colder weeks like the ones ahead would normally shift demand toward Sweaters and Leggings and away from Shorts and swimwear.</div>';
+  }catch(e){
+    box.innerHTML = '<p class="hint"><span class="err">Live weather is unavailable right now (' + esc(e.message) + ').</span> The forecast above does not depend on this panel.</p>';
+  }
+}
+
+function tempChart(d){
+  const W=720,H=230,pl=38,pr=12,pt=12,pb=26;
+  const all = d.flatMap(x=>[x.temp_min,x.temp_max]);
+  const lo = Math.floor(Math.min(...all)-1), hi = Math.ceil(Math.max(...all)+1);
+  const x = i => pl + i*(W-pl-pr)/(d.length-1), y = v => pt + (hi-v)*(H-pt-pb)/(hi-lo);
+  const step = (hi-lo) > 12 ? 4 : 2;
+  let s = '<h3>Temperature (°C): line = daily mean, band = min to max</h3><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Temperature forecast">';
+  for(let t=Math.ceil(lo/step)*step; t<=hi; t+=step){
+    s += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(t)+'" y2="'+y(t)+'" stroke="var(--line)"/>' +
+         '<text x="'+(pl-6)+'" y="'+(y(t)+4)+'" text-anchor="end">'+t+'</text>';
+  }
+  if(lo < 0 && hi > 0) s += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(0)+'" y2="'+y(0)+'" stroke="var(--muted)" stroke-dasharray="4 4"/>';
+  const top = d.map((v,i)=>x(i)+','+y(v.temp_max)).join(' '),
+        bot = d.map((v,i)=>x(i)+','+y(v.temp_min)).reverse().join(' ');
+  s += '<polygon points="'+top+' '+bot+'" fill="var(--accent)" opacity=".16"/>';
+  s += '<polyline points="'+d.map((v,i)=>x(i)+','+y(v.temp_mean)).join(' ')+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>';
+  d.forEach((v,i)=>{
+    s += '<circle cx="'+x(i)+'" cy="'+y(v.temp_mean)+'" r="3" fill="var(--accent)"><title>'+dm(v.t_dat)+': '+v.temp_mean+' °C (min '+v.temp_min+', max '+v.temp_max+')</title></circle>';
+    if(i % 2 === 0) s += '<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="middle">'+dm(v.t_dat)+'</text>';
+  });
+  return s + '</svg>';
+}
+
+function precipChart(d){
+  const W=720,H=110,pl=38,pr=12,pt=10,pb=22;
+  const mx = Math.max(1, ...d.map(v=>v.precip))*1.15, slot=(W-pl-pr)/d.length, bw=slot*0.55;
+  let s = '<h3 style="margin-top:6px">Precipitation (mm per day)</h3><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Precipitation forecast">';
+  s += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+(H-pb)+'" y2="'+(H-pb)+'" stroke="var(--line)"/>';
+  s += '<text x="'+(pl-6)+'" y="'+(pt+8)+'" text-anchor="end">'+mx.toFixed(0)+'</text><text x="'+(pl-6)+'" y="'+(H-pb)+'" text-anchor="end">0</text>';
+  d.forEach((v,i)=>{
+    const h=(H-pt-pb)*v.precip/mx, bx=pl+i*slot+(slot-bw)/2;
+    s += '<rect x="'+bx+'" y="'+(H-pb-h)+'" width="'+bw+'" height="'+h+'" rx="3" fill="var(--b)"><title>'+dm(v.t_dat)+': '+v.precip+' mm</title></rect>';
+  });
+  return s + '</svg>';
+}
+
+document.getElementById("csv").onclick = () => {
+  if(!DATA) return;
+  const w = DATA.forecast_weeks;
+  const head = ["product_type","class","service_goal","forecast_4wk","safety_stock","order_up_to"].concat(w.map(x=>"week_"+x));
+  const rows = DATA.products.map(p => [p.product_type,p.class,p.target_service,p.forecast_4wk,p.safety_stock,p.order_up_to]
+    .concat(p.weekly_forecast.map(x=>x.units)));
+  const csv = [head].concat(rows).map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
+  a.download = "order_plan.csv"; a.click();
+};
+
+load();
+</script>
+</body>
+</html>

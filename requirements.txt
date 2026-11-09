@@ -1,0 +1,9 @@
+pandas
+numpy
+requests
+holidays
+matplotlib
+lightgbm
+scikit-learn
+shap
+flask

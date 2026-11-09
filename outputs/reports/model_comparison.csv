@@ -1,0 +1,11 @@
+model,WAPE_%,RMSE,Bias_%
+ens_ratio_plus_seasonal,23.19,5893.73,3.81
+lgbm_poisson_weather,24.8,6361.42,-3.33
+ens_all_lgbm,24.92,6394.13,-3.85
+lgbm_v1_weather,25.63,6575.84,-3.16
+seasonal_naive,25.88,6741.18,12.69
+lgbm_ratio_weather,26.75,6771.7,-5.07
+seasonal_naive_smooth,26.78,6426.79,13.82
+lgbm_ratio_no_weather,28.78,7465.4,-5.6
+moving_avg_4,37.73,9284.25,-0.17
+naive_lag4,39.13,10074.48,-0.05

@@ -1,0 +1,20 @@
+model,family,WAPE_%,WAPE_ci90_low,WAPE_ci90_high,RMSE,Bias_%,vs_seasonal_naive_pts,diff_ci90_low,diff_ci90_high,clearly_beats_seasonal_naive
+ens_ratio_plus_seasonal,ensemble,23.19,19.18,27.35,5893.73,3.81,-2.69,-5.74,0.67,False
+ens_trees_plus_seasonal,ensemble,23.68,19.71,27.9,6057.27,1.13,-2.2,-6.12,2.28,False
+ens_xgb_plus_seasonal,ensemble,23.87,19.23,28.71,6092.81,4.82,-2.0,-5.33,1.94,False
+ens_boosted_plus_seasonal,ensemble,23.92,19.63,28.49,6084.93,1.53,-1.96,-6.16,2.89,False
+lgbm_poisson_weather,boosted trees,24.8,21.36,29.0,6361.42,-3.33,-1.07,-7.58,5.82,False
+ens_all_lgbm,ensemble,24.92,21.17,29.35,6394.13,-3.85,-0.96,-7.11,5.63,False
+lgbm_v1_weather,boosted trees,25.63,21.48,30.62,6575.84,-3.16,-0.25,-6.05,6.35,False
+xgboost_poisson_weather,boosted trees,25.71,21.66,30.61,6551.14,-3.16,-0.17,-6.91,6.95,False
+extra_trees_ratio_weather,bagged trees,25.82,21.39,30.98,6662.05,-3.37,-0.05,-5.34,6.13,False
+seasonal_naive,baseline,25.88,19.88,32.23,6741.18,12.69,0.0,0.0,0.0,False
+lgbm_ratio_weather,boosted trees,26.75,23.27,30.76,6771.7,-5.07,0.88,-5.38,7.33,False
+seasonal_naive_smooth,baseline,26.78,22.06,31.62,6426.79,13.82,0.91,-1.69,3.28,False
+random_forest_ratio_weather,bagged trees,27.51,22.92,32.83,7112.81,-4.23,1.63,-3.68,7.87,False
+xgboost_ratio_weather,boosted trees,27.95,21.48,35.37,7208.96,-3.04,2.07,-4.89,9.87,False
+lgbm_ratio_no_weather,boosted trees,28.78,25.56,32.49,7465.4,-5.6,2.9,-3.57,9.23,False
+ridge_ratio_weather,linear,31.21,27.4,35.29,7940.31,-4.51,5.34,0.23,10.69,False
+ets_damped,statistical,36.56,28.51,45.42,9791.05,5.12,10.68,1.42,19.55,False
+moving_avg_4,baseline,37.73,29.94,47.26,9284.25,-0.17,11.86,3.22,22.51,False
+naive_lag4,baseline,39.13,30.61,49.34,10074.48,-0.05,13.26,6.23,22.35,False

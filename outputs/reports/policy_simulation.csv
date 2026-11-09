@@ -1,0 +1,6 @@
+,fill_rate_%,cycle_service_%,excess_stock_%_of_demand,total_order_up_to_vs_demand_%
+naive_lag4,96.7,87.8,56.4,53.1
+moving_avg_4,94.6,78.9,56.6,51.2
+seasonal_naive,99.7,94.4,42.7,42.4
+lgbm_poisson_weather,97.9,90.0,33.1,31.1
+ens_ratio_plus_seasonal,99.3,91.1,35.4,34.7
